@@ -151,6 +151,7 @@ public class KartRank {
 		
 		SimpleDateFormat simpleDateFormatTime = new SimpleDateFormat("HH:mm:ss.SSS");
 		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("mm:ss.SSS");
+		Date winnersArrival = null;
 		Date bestTurnRunning = null;
 		
 		Iterator<Map.Entry<String, Register>> rankValues = sortedset.iterator();
@@ -163,6 +164,14 @@ public class KartRank {
 			System.out.println("Tempo Total da Prova: " + simpleDateFormatTime.format(mapEntry.getValue().getTime()));
 			System.out.println("Melhor Volta: " + simpleDateFormat.format(mapEntry.getValue().getTimeTurn()));
 			System.out.println("Velocidade Média: " + mapEntry.getValue().getAverageLapSpeed());
+			
+			if (position == 1) {
+				winnersArrival = mapEntry.getValue().getTime();
+			} else {
+				long dif = (mapEntry.getValue().getTime().getTime() - winnersArrival.getTime());
+				System.out.println("Tempo de chegada após o vencedor: " + simpleDateFormat.format(new Date(dif)));
+			}
+			
 			System.out.println("-------------------------------------------");
 			
 			if (bestTurnRunning == null || (bestTurnRunning != null && bestTurnRunning.after(mapEntry.getValue().getTimeTurn()))) {
