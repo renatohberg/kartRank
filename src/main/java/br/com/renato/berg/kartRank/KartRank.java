@@ -5,9 +5,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,12 +29,10 @@ public class KartRank {
 	private void includeRegister(List<String> parameters) {
 		Register register = new Register();
 		
-		SimpleDateFormat simpleDateFormatTime = new SimpleDateFormat("HH:mm:ss.SSS");
-		SimpleDateFormat simpleDateFormatTimeTurn = new SimpleDateFormat("mm:ss.SSS");
 		for (int pos = 0; pos < parameters.size(); pos++) {
 			try {
 				if (pos == 0) {
-					Date time = simpleDateFormatTime.parse(parameters.get(pos));
+					LocalTime time = LocalTime.parse(parameters.get(pos));
 					register.setTime(time);
 				} else if (pos == 1) {
 					String codeAndName = parameters.get(pos);
@@ -44,14 +42,14 @@ public class KartRank {
 					Integer numberOfTurn = Integer.valueOf(parameters.get(pos));
 					register.setNumberOfTurn(numberOfTurn);
 				} else if (pos == 3) {
-					Date timeTurn = simpleDateFormatTimeTurn.parse(parameters.get(pos));
+					LocalTime timeTurn = LocalTime.parse("00:0" + parameters.get(pos));
 					register.setTimeTurn(timeTurn);
 				} else if (pos == 4) {
 					NumberFormat numberFormat = NumberFormat.getInstance(new Locale("pt", "BR"));
 					Number number = numberFormat.parse(parameters.get(pos));
 					register.setAverageLapSpeed(number.doubleValue());
 				}
-			} catch(Exception exception) { }
+			} catch(Exception exception) {}
 			
 			if (register.getTime() != null && (register.getPilotCode() != null && !register.getPilotCode().isEmpty()) && (register.getPilotName() != null && !register.getPilotName().isEmpty()) && register.getNumberOfTurn() != null && register.getTimeTurn() != null && register.getAverageLapSpeed() != null) {
 				registers.add(register);
@@ -115,8 +113,11 @@ public class KartRank {
 			if (rank.containsKey(register.getPilotCode())) {
 				Register newRegister = rank.get(register.getPilotCode());
 				
-				long sum = newRegister.getTime().getTime() + register.getTimeTurn().getTime();
-				newRegister.setTime(new Date(sum));
+				LocalTime localTime = newRegister.getTime().plusHours(register.getTimeTurn().getHour())
+						.plusMinutes(register.getTimeTurn().getMinute()).plusSeconds(register.getTimeTurn().getSecond())
+						.plusNanos(register.getTimeTurn().getNano());
+				
+				newRegister.setTime(localTime);
 				
 				newRegister.setPilotCode(register.getPilotCode());
 				
@@ -124,7 +125,7 @@ public class KartRank {
 				
 				newRegister.setNumberOfTurn((register.getNumberOfTurn() > newRegister.getNumberOfTurn()) ? register.getNumberOfTurn() : newRegister.getNumberOfTurn());
 				
-				newRegister.setTimeTurn((register.getTimeTurn().before(newRegister.getTimeTurn())) ? register.getTimeTurn() : newRegister.getTimeTurn());
+				newRegister.setTimeTurn((register.getTimeTurn().isBefore(newRegister.getTimeTurn())) ? register.getTimeTurn() : newRegister.getTimeTurn());
 				
 				newRegister.setAverageLapSpeed((register.getAverageLapSpeed() + newRegister.getAverageLapSpeed()) / 2);
 				
@@ -149,10 +150,9 @@ public class KartRank {
 
 		sortedset.addAll(rank.entrySet());
 		
-		SimpleDateFormat simpleDateFormatTime = new SimpleDateFormat("HH:mm:ss.SSS");
-		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("mm:ss.SSS");
-		Date winnersArrival = null;
-		Date bestTurnRunning = null;
+		DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("mm:ss.SSS");
+		LocalTime winnersArrival = null;
+		LocalTime bestTurnRunning = null;
 		
 		Iterator<Map.Entry<String, Register>> rankValues = sortedset.iterator();
 		for (int position = 1; rankValues.hasNext(); position++) {
@@ -161,25 +161,27 @@ public class KartRank {
 			System.out.println("Código do Piloto: " + mapEntry.getValue().getPilotCode());
 			System.out.println("Nome do Piloto: " + mapEntry.getValue().getPilotName());
 			System.out.println("Qtde Voltas Completadas: " + mapEntry.getValue().getNumberOfTurn());
-			System.out.println("Tempo Total da Prova: " + simpleDateFormatTime.format(mapEntry.getValue().getTime()));
-			System.out.println("Melhor Volta: " + simpleDateFormat.format(mapEntry.getValue().getTimeTurn()));
+			System.out.println("Tempo Total da Prova: " + dateTimeFormatter.format(mapEntry.getValue().getTime()));
+			System.out.println("Melhor Volta: " + dateTimeFormatter.format(mapEntry.getValue().getTimeTurn()));
 			System.out.println("Velocidade Média: " + mapEntry.getValue().getAverageLapSpeed());
 			
 			if (position == 1) {
 				winnersArrival = mapEntry.getValue().getTime();
 			} else {
-				long dif = (mapEntry.getValue().getTime().getTime() - winnersArrival.getTime());
-				System.out.println("Tempo de chegada após o vencedor: " + simpleDateFormat.format(new Date(dif)));
+				LocalTime localTime = mapEntry.getValue().getTime().minusHours(winnersArrival.getHour())
+						.minusMinutes(winnersArrival.getMinute()).minusSeconds(winnersArrival.getSecond())
+						.minusNanos(winnersArrival.getNano());
+				System.out.println("Tempo de chegada após o vencedor: " + dateTimeFormatter.format(localTime));
 			}
 			
 			System.out.println("-------------------------------------------");
 			
-			if (bestTurnRunning == null || (bestTurnRunning != null && bestTurnRunning.after(mapEntry.getValue().getTimeTurn()))) {
+			if (bestTurnRunning == null || (bestTurnRunning != null && bestTurnRunning.isAfter(mapEntry.getValue().getTimeTurn()))) {
 				bestTurnRunning = mapEntry.getValue().getTimeTurn();
 			}
 		}
 		
-		System.out.println("Melhor Volta da Corrida: " + simpleDateFormat.format(bestTurnRunning));
+		System.out.println("Melhor Volta da Corrida: " + dateTimeFormatter.format(bestTurnRunning));
 	}
 
 	public void obtainData(File file) {

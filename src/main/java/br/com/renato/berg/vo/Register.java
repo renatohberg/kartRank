@@ -1,27 +1,27 @@
 package br.com.renato.berg.vo;
 
-import java.util.Date;
+import java.time.LocalTime;
 
 public class Register implements Comparable<Register> {
 
-	private Date time;
+	private LocalTime time;
 	private String pilotCode;
 	private String pilotName;
 	private Integer numberOfTurn;
-	private Date timeTurn;
+	private LocalTime timeTurn;
 	private Double averageLapSpeed;
 
 	/**
 	 * @return the time
 	 */
-	public Date getTime() {
+	public LocalTime getTime() {
 		return time;
 	}
 
 	/**
 	 * @param time the time to set
 	 */
-	public void setTime(Date time) {
+	public void setTime(LocalTime time) {
 		this.time = time;
 	}
 
@@ -70,14 +70,14 @@ public class Register implements Comparable<Register> {
 	/**
 	 * @return the timeTurn
 	 */
-	public Date getTimeTurn() {
+	public LocalTime getTimeTurn() {
 		return timeTurn;
 	}
 
 	/**
 	 * @param timeTurn the timeTurn to set
 	 */
-	public void setTimeTurn(Date timeTurn) {
+	public void setTimeTurn(LocalTime timeTurn) {
 		this.timeTurn = timeTurn;
 	}
 
@@ -96,11 +96,11 @@ public class Register implements Comparable<Register> {
 	}
 
 	public int compareTo(Register anotherRegister) {
-		if ((this.numberOfTurn > anotherRegister.getNumberOfTurn()) || (this.numberOfTurn == anotherRegister.getNumberOfTurn() && this.time.getTime() < anotherRegister.getTime().getTime())) {
+		if ((this.numberOfTurn > anotherRegister.getNumberOfTurn()) || (this.numberOfTurn == anotherRegister.getNumberOfTurn() && this.time.isBefore(anotherRegister.getTime()))) {
 			return -1;
 		}
 		
-		if ((this.numberOfTurn < anotherRegister.getNumberOfTurn()) || (this.numberOfTurn == anotherRegister.getNumberOfTurn() && this.time.getTime() > anotherRegister.getTime().getTime())) {
+		if ((this.numberOfTurn < anotherRegister.getNumberOfTurn()) || (this.numberOfTurn == anotherRegister.getNumberOfTurn() && this.time.isAfter(anotherRegister.getTime()))) {
 			return 1;
 		}
 		
